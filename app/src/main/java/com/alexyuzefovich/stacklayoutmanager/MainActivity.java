@@ -19,7 +19,9 @@ public class MainActivity extends AppCompatActivity {
         CardsAdapter cardsAdapter = new CardsAdapter();
         cardsAdapter.setItems(generateItems());
         recyclerView.setAdapter(cardsAdapter);
-        recyclerView.setLayoutManager(new StackLayoutManager());
+        StackLayoutManager stackLayoutManager = new StackLayoutManager();
+        stackLayoutManager.setBottomOffset(50);
+        recyclerView.setLayoutManager(stackLayoutManager);
     }
 
     private List<String> generateItems() {
