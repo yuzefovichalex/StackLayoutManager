@@ -2,6 +2,7 @@ package com.alexyuzefovich.stacklayoutmanager;
 
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class StackLayoutManager extends RecyclerView.LayoutManager {
@@ -25,9 +26,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         int viewHeight = getHeight() - 100;
 
         while (fillDown && position < itemCount){
-            View view = recycler.getViewForPosition(position);
-            addView(view);
-            measureChildWithMargins(view, 0, 0);
+            View view = addViewFromRecycler(recycler, position, false);
             layoutDecorated(view, 0, viewTop, getWidth(), viewTop + viewHeight);
             viewTop = getDecoratedBottom(view);
             fillDown = viewTop <= height;
@@ -49,10 +48,11 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                 View thirdView = getChildAt(2);
                 int secondViewItemPosition = getPosition(secondView);
                 if (thirdView == null && secondViewItemPosition != getItemCount() - 1) {
-                    thirdView = recycler.getViewForPosition(secondViewItemPosition + 1);
-                    addView(thirdView);
-                    measureChildWithMargins(thirdView, 0, 0);
-                    layoutDecorated(thirdView, 0, getDecoratedBottom(secondView), getWidth(), getDecoratedBottom(secondView) + getHeight() - 100);
+                    thirdView = addViewFromRecycler(recycler, secondViewItemPosition + 1, false);
+                    int viewTop = getDecoratedBottom(secondView);
+                    int viewRight = getWidth();
+                    int viewBottom = viewTop + getHeight() - 100;
+                    layoutDecorated(thirdView, 0, viewTop, viewRight, viewBottom);
                 }
                 int top = secondView.getTop() - dy;
                 int delta = -dy;
@@ -66,10 +66,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                 } else if (dy < 0) {
                     if (top > getDecoratedBottom(firstView)) {
                         if (getPosition(firstView) != 0) {
-                            View view = recycler.getViewForPosition(getPosition(firstView) - 1);
-                            addView(view, 0);
-                            measureChildWithMargins(view, 0, 0);
-                            layoutDecorated(view, 0, 0, getWidth(), getHeight() - 100);
+                            View view = addViewFromRecycler(recycler, getPosition(firstView) - 1, true);
+                            int viewRight = getWidth();
+                            int viewBottom = getHeight() - 100;
+                            layoutDecorated(view, 0, 0, viewRight, viewBottom);
                         } else { // for blocking scroll of first item
                             delta = 0;
                         }
@@ -82,7 +82,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                     for (int i = 1; i < getChildCount(); i++) {
                         View view = getChildAt(i);
                         if (view != null) {
-                            layoutDecorated(view, 0, view.getTop() + delta, getWidth(), view.getBottom() + delta);
+                            int viewTop = view.getTop() + delta;
+                            int viewRight = getWidth();
+                            int viewBottom = view.getBottom() + delta;
+                            layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
                         }
                     }
                     return dy;
@@ -91,5 +94,18 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         }
         return 0;
     }
+
+    @NonNull
+    private View addViewFromRecycler(RecyclerView.Recycler recycler, int position, boolean addToStart) {
+        View view = recycler.getViewForPosition(position);
+        if (addToStart) {
+            addView(view, 0);
+        } else {
+            addView(view);
+        }
+        measureChildWithMargins(view, 0, 0);
+        return view;
+    }
+
 
 }
