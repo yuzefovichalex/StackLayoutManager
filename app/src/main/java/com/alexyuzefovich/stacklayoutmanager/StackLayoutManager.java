@@ -7,12 +7,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class StackLayoutManager extends RecyclerView.LayoutManager {
 
-    private float currentOffset = 0;
+    private static final int DEFAULT_BOTTOM_OFFSET = 0;
+    private static final float DEFAULT_SCALE_FACTOR = 1;
 
-    private int bottomOffset = 0;
+    private float currentScrollOffset = 0;
+
+    private int bottomOffset = DEFAULT_BOTTOM_OFFSET;
+    private float scaleFactor = DEFAULT_SCALE_FACTOR;
 
     public void setBottomOffset(int bottomOffset) {
         this.bottomOffset = bottomOffset;
+    }
+
+    public void setScaleFactor(float scaleFactor) {
+        this.scaleFactor =
+                scaleFactor >= 0f && scaleFactor <= 1f
+                        ? scaleFactor
+                        : DEFAULT_SCALE_FACTOR;
     }
 
     @Override
@@ -72,24 +83,28 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                 int delta = -dy;
                 int secondViewTop = secondView.getTop() + delta;
 
-                currentOffset = (currentOffset + dy) % firstView.getHeight();
+                // value in range [-viewHeight; viewHeight]
+                currentScrollOffset = (currentScrollOffset + dy) % firstView.getHeight();
 
+                float scaleValue = 1f;
                 // scroll down
                 if (dy > 0) {
                     // if this case is true than second view scrolls up to max top position
                     // that's why we need to scroll it to 0 (max top position), because top value can be less than 0
                     if (secondViewTop < 0) {
                         delta = -secondView.getTop();
-                        currentOffset = 0;
+                        // this check is needed for correct animation of penult item
+                        // every time when second view reaches top of recycler we reset to zero current offset
+                        if (getPosition(firstView) != getItemCount() - 2) {
+                            currentScrollOffset = 0;
+                        } else {
+                            // but if this is the penult item - current offset is max possible value (viewHeight),
+                            // because in case of penult item we don't delete first view from recycler
+                            currentScrollOffset = firstView.getHeight();
+                        }
                     }
-
-                    float scaleValue = 1 - Math.abs(currentOffset) / firstView.getHeight();
-                    firstView.setScaleX(scaleValue);
-                    firstView.setScaleY(scaleValue);
+                    scaleValue = 1 - Math.abs(currentScrollOffset * scaleFactor) / firstView.getHeight();
                 } else if (dy < 0) { // scroll up
-                    float scaleValue = 1 - Math.abs(currentOffset) / firstView.getHeight();
-                    firstView.setScaleX(scaleValue);
-                    firstView.setScaleY(scaleValue);
                     if (secondViewTop > getDecoratedBottom(firstView)) {
                         // if first view is not first in item list we add view under current scrolling view (it will be new first view)
                         if (getPosition(firstView) != 0) {
@@ -99,17 +114,19 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                             layoutDecorated(view, 0, 0, viewRight, viewBottom);
                             view.setScaleX(0f);
                             view.setScaleY(0f);
-                            currentOffset = firstView.getHeight();
-                        } else { // for scroll to max bottom position
-                            delta = getDecoratedBottom(firstView) - getDecoratedTop(secondView);
-                            currentOffset = 0;
+                            currentScrollOffset = firstView.getHeight();
+                        } else {
+                            currentScrollOffset = 0;
                         }
+                        // for scroll to max bottom position without overscroll
+                        delta = getDecoratedBottom(firstView) - getDecoratedTop(secondView);
                         // remove redundant not visible fourth item
                         if (getChildCount() > 3) {
                             removeAndRecycleViewAt(3, recycler);
                         }
+                    } else {
+                        scaleValue = 1 - Math.abs(currentScrollOffset * scaleFactor) / firstView.getHeight();
                     }
-
                 }
 
                 // if we can scroll
@@ -128,6 +145,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
                     if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
                         removeAndRecycleViewAt(0, recycler);
                     }
+
+                    // scale-on-scroll
+                    firstView.setScaleX(scaleValue);
+                    firstView.setScaleY(scaleValue);
                     return dy;
                 }
             }
