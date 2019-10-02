@@ -1,5 +1,6 @@
 package com.alexyuzefovich.stacklayoutmanager;
 
+import android.graphics.Rect;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -52,6 +53,8 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
             position++;
         }
     }
+
+
 
     @Override
     public boolean canScrollVertically() {
@@ -164,9 +167,33 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         } else {
             addView(view);
         }
-        measureChildWithMargins(view, 0, 0);
+        int widthSpec = View.MeasureSpec.makeMeasureSpec(getWidth(), View.MeasureSpec.EXACTLY);
+        int heightSpec = View.MeasureSpec.makeMeasureSpec(getHeight(), View.MeasureSpec.EXACTLY);
+        measureChildWithDecorationsAndMargin(view, widthSpec, heightSpec);
         return view;
     }
+    
+    private void measureChildWithDecorationsAndMargin(View child, int widthSpec, int heightSpec) {
+        Rect decorRect = new Rect();
+        calculateItemDecorationsForChild(child, decorRect);
+        RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) child.getLayoutParams();
+        widthSpec = updateSpecWithExtra(widthSpec, lp.leftMargin + decorRect.left,
+                lp.rightMargin + decorRect.right);
+        heightSpec = updateSpecWithExtra(heightSpec, lp.topMargin + decorRect.top,
+                lp.bottomMargin + decorRect.bottom + bottomOffset);
+        child.measure(widthSpec, heightSpec);
+    }
 
+    private int updateSpecWithExtra(int spec, int startInset, int endInset) {
+        if (startInset == 0 && endInset == 0) {
+            return spec;
+        }
+        final int mode = View.MeasureSpec.getMode(spec);
+        if (mode == View.MeasureSpec.AT_MOST || mode == View.MeasureSpec.EXACTLY) {
+            return View.MeasureSpec.makeMeasureSpec(
+                    View.MeasureSpec.getSize(spec) - startInset - endInset, mode);
+        }
+        return spec;
+    }
 
 }
