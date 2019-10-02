@@ -1,12 +1,14 @@
 package com.alexyuzefovich.stacklayoutmanager;
 
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class StackLayoutManager extends RecyclerView.LayoutManager {
+public class StackLayoutManager extends RecyclerView.LayoutManager implements RecyclerView.SmoothScroller.ScrollVectorProvider {
 
     private static final int DEFAULT_BOTTOM_OFFSET = 0;
     private static final float DEFAULT_SCALE_FACTOR = 1;
@@ -203,5 +205,28 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         firstPosition = position;
         removeAllViews();
         requestLayout();
+    }
+
+    @Override
+    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+        LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
+            @Override
+            protected int getVerticalSnapPreference() {
+                return SNAP_TO_START;
+            }
+        };
+        linearSmoothScroller.setTargetPosition(position);
+        startSmoothScroll(linearSmoothScroller);
+    }
+
+    @Override
+    public PointF computeScrollVectorForPosition(int targetPosition) {
+        View firstChild = getChildAt(0);
+        if (getChildCount() != 0 && firstChild != null) {
+            int firstChildPos = getPosition(firstChild);
+            int direction = targetPosition < firstChildPos ? -1 : 1;
+            return new PointF(0, direction);
+        }
+        return null;
     }
 }
