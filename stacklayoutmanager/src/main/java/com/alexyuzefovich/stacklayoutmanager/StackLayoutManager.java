@@ -11,6 +11,8 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
     private static final int DEFAULT_BOTTOM_OFFSET = 0;
     private static final float DEFAULT_SCALE_FACTOR = 1;
 
+    private int firstPosition = 0;
+
     private float currentScrollOffset = 0;
 
     private int bottomOffset = DEFAULT_BOTTOM_OFFSET;
@@ -38,20 +40,20 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
         detachAndScrapAttachedViews(recycler);
-        int position = 0;
-        boolean fillDown = true;
-        int height = getHeight();
         int viewTop = 0;
         int itemCount = getItemCount();
         int viewHeight = getHeight() - bottomOffset;
+        boolean isFirstIsLastItem = firstPosition == itemCount - 1;
 
-        while (fillDown && position < itemCount){
-            View view = addViewFromRecycler(recycler, position, false);
+        int startPosition = isFirstIsLastItem ? itemCount - 2 : firstPosition;
+        for (int i = startPosition; i < startPosition + 2; i++) {
+            View view = addViewFromRecycler(recycler, i, false);
             layoutDecorated(view, 0, viewTop, getWidth(), viewTop + viewHeight);
-            viewTop = getDecoratedBottom(view);
-            fillDown = viewTop <= height;
-            position++;
+            if (!isFirstIsLastItem) {
+                viewTop = getDecoratedBottom(view);
+            }
         }
+        currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
     }
 
 
@@ -172,7 +174,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         measureChildWithDecorationsAndMargin(view, widthSpec, heightSpec);
         return view;
     }
-    
+
     private void measureChildWithDecorationsAndMargin(View child, int widthSpec, int heightSpec) {
         Rect decorRect = new Rect();
         calculateItemDecorationsForChild(child, decorRect);
@@ -196,4 +198,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager {
         return spec;
     }
 
+    @Override
+    public void scrollToPosition(int position) {
+        firstPosition = position;
+        removeAllViews();
+        requestLayout();
+    }
 }
