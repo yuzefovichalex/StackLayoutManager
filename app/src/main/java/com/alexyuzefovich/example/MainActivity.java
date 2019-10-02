@@ -1,9 +1,11 @@
-package com.alexyuzefovich.stacklayoutmanager;
+package com.alexyuzefovich.example;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+
+import com.alexyuzefovich.stacklayoutmanager.StackLayoutManager;
 
 import java.util.ArrayList;
 import java.util.List;

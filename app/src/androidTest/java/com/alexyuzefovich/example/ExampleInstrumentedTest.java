@@ -1,4 +1,4 @@
-package com.alexyuzefovich.stacklayoutmanager;
+package com.alexyuzefovich.example;
 
 import android.content.Context;
 
