@@ -209,9 +209,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     @Override
     public void scrollToPosition(int position) {
-        firstPosition = position;
-        removeAllViews();
-        requestLayout();
+        requestLayout(position);
     }
 
     @Override
@@ -237,4 +235,15 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         return null;
     }
 
+    @Override
+    public void onItemsChanged(@NonNull RecyclerView recyclerView) {
+        super.onItemsChanged(recyclerView);
+        requestLayout(0);
+    }
+
+    private void requestLayout(int firstPosition) {
+        this.firstPosition = firstPosition;
+        removeAllViews();
+        requestLayout();
+    }
 }
