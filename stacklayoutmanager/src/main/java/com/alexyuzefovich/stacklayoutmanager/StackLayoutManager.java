@@ -41,24 +41,8 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        detachAndScrapAttachedViews(recycler);
-        int viewTop = 0;
-        int itemCount = getItemCount();
-        int viewHeight = getHeight() - bottomOffset;
-        boolean isFirstIsLastItem = firstPosition == itemCount - 1;
-
-        int startPosition = isFirstIsLastItem ? itemCount - 2 : firstPosition;
-        for (int i = startPosition; i < startPosition + 2; i++) {
-            View view = addViewFromRecycler(recycler, i, false);
-            layoutDecorated(view, 0, viewTop, getWidth(), viewTop + viewHeight);
-            if (!isFirstIsLastItem) {
-                viewTop = getDecoratedBottom(view);
-            }
-        }
-        currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
+        fill(0, recycler);
     }
-
-
 
     @Override
     public boolean canScrollVertically() {
@@ -67,6 +51,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+        return fill(dy, recycler);
+    }
+
+    private int fill(int dy, RecyclerView.Recycler recycler) {
         // if two items or more we can scroll it
         if (getItemCount() > 1) {
             // view fixed in the top
@@ -114,13 +102,15 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 } else if (dy < 0) { // scroll up
                     if (secondViewTop > getDecoratedBottom(firstView)) {
                         // if first view is not first in item list we add view under current scrolling view (it will be new first view)
-                        if (getPosition(firstView) != 0) {
+                        int firstViewPosition = getPosition(firstView);
+                        if (firstViewPosition != 0) {
                             View view = addViewFromRecycler(recycler, getPosition(firstView) - 1, true);
+                            firstPosition = firstViewPosition - 1;
                             int viewRight = getWidth();
                             int viewBottom = getHeight() - bottomOffset;
                             layoutDecorated(view, 0, 0, viewRight, viewBottom);
-                            view.setScaleX(0f);
-                            view.setScaleY(0f);
+                            view.setScaleX(scaleFactor);
+                            view.setScaleY(scaleFactor);
                             currentScrollOffset = firstView.getHeight();
                         } else {
                             currentScrollOffset = 0;
@@ -148,16 +138,33 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                             layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
                         }
                     }
-                    // if second view completely overlaps first view (first view is not visible now) we remove first view
-                    if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
-                        removeAndRecycleViewAt(0, recycler);
-                    }
 
                     // scale-on-scroll
                     firstView.setScaleX(scaleValue);
                     firstView.setScaleY(scaleValue);
+
+                    // if second view completely overlaps first view (first view is not visible now) we remove first view
+                    if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
+                        removeAndRecycleViewAt(0, recycler);
+                        firstPosition = getPosition(firstView) + 1;
+                    }
                     return dy;
                 }
+            } else {
+                int viewTop = 0;
+                int itemCount = getItemCount();
+                int viewHeight = getHeight() - bottomOffset;
+                boolean isFirstIsLastItem = firstPosition == itemCount - 1;
+
+                int startPosition = isFirstIsLastItem ? itemCount - 2 : firstPosition;
+                for (int i = startPosition; i < startPosition + 2; i++) {
+                    View view = addViewFromRecycler(recycler, i, false);
+                    layoutDecorated(view, 0, viewTop, getWidth(), viewTop + viewHeight);
+                    if (!isFirstIsLastItem) {
+                        viewTop = getDecoratedBottom(view);
+                    }
+                }
+                currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
             }
         }
         return 0;
@@ -229,4 +236,5 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         }
         return null;
     }
+
 }
