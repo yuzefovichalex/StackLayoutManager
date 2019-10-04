@@ -13,6 +13,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     private static final int DEFAULT_BOTTOM_OFFSET = 0;
     private static final float DEFAULT_SCALE_FACTOR = 1;
 
+    // value stored item position of first child view
     private int firstPosition = 0;
 
     private float currentScrollOffset = 0;
@@ -44,19 +45,24 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         fill(recycler);
     }
 
+    /**This method is used for fill initial pack of view or when one (or more) child view
+     * calls its measure() and layout() methods on resizing event**/
     private void fill(RecyclerView.Recycler recycler) {
         int itemCount = getItemCount();
         int viewHeight = getHeight() - bottomOffset;
         boolean isFirstIsLastItem = firstPosition == itemCount - 1;
+        // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
         if (getChildCount() == 0) {
             currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
-        } else {
+        } else { // children have updates (ex. resizing)
+            // remove all view before adding and re-measure
             removeAndRecycleAllViews(recycler);
         }
 
         int viewTop = 0;
         int startPosition = isFirstIsLastItem ? itemCount - 2 : firstPosition;
         int endPosition = startPosition + 1;
+        // add child views taking into account the currentScrollOffset
         for (int i = startPosition; i <= endPosition; i++) {
             View view = addViewFromRecycler(recycler, i, false);
             int viewRight = getWidth();
@@ -78,6 +84,8 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         return scrollBy(dy, recycler);
     }
 
+    /**This method is used for apply dy offset for child views and add/remove needed children
+     * on scroll**/
     private int scrollBy(int dy, RecyclerView.Recycler recycler) {
         // view fixed in the top
         View firstView = getChildAt(0);
