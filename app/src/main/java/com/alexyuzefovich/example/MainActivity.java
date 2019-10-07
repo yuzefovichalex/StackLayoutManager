@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
         CardsAdapter cardsAdapter = new CardsAdapter();
         cardsAdapter.setItems(generateItems());
         recyclerView.setAdapter(cardsAdapter);
-        final StackLayoutManager stackLayoutManager = new StackLayoutManager();
+        StackLayoutManager stackLayoutManager = new StackLayoutManager();
         stackLayoutManager.setBottomOffset(50);
         stackLayoutManager.setScaleFactor(0.5f);
         recyclerView.setLayoutManager(stackLayoutManager);

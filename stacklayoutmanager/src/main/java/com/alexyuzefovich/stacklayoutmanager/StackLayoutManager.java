@@ -21,6 +21,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     private int bottomOffset = DEFAULT_BOTTOM_OFFSET;
     private float scaleFactor = DEFAULT_SCALE_FACTOR;
 
+    public int getBottomOffset() {
+        return bottomOffset;
+    }
+
     public void setBottomOffset(int bottomOffset) {
         this.bottomOffset = bottomOffset;
     }
