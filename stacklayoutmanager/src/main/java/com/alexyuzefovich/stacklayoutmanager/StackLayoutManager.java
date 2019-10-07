@@ -49,27 +49,33 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
      * calls its measure() and layout() methods on resizing event**/
     private void fill(RecyclerView.Recycler recycler) {
         int itemCount = getItemCount();
-        int viewHeight = getHeight() - bottomOffset;
-        boolean isFirstIsLastItem = firstPosition == itemCount - 1;
-        // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
-        if (getChildCount() == 0) {
-            currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
-        } else { // children have updates (ex. resizing)
-            // remove all view before adding and re-measure
-            removeAndRecycleAllViews(recycler);
-        }
+        if (itemCount > 0) {
+            int viewHeight = getHeight() - bottomOffset;
+            boolean isFirstIsLastItem = firstPosition == itemCount - 1;
+            // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
+            if (getChildCount() == 0) {
+                currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
+            } else { // children have updates (ex. resizing)
+                // remove all view before adding and re-measure
+                removeAndRecycleAllViews(recycler);
+            }
 
-        int viewTop = 0;
-        int startPosition = isFirstIsLastItem ? itemCount - 2 : firstPosition;
-        int endPosition = startPosition + 1;
-        // add child views taking into account the currentScrollOffset
-        for (int i = startPosition; i <= endPosition; i++) {
-            View view = addViewFromRecycler(recycler, i, false);
-            int viewRight = getWidth();
-            int viewBottom = viewTop + viewHeight;
-            layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
-            if (!isFirstIsLastItem) {
-                viewTop = getDecoratedBottom(view) - (int) currentScrollOffset;
+            int viewTop = 0;
+            int startPosition = itemCount > 1
+                    ? (isFirstIsLastItem ? itemCount - 2 : firstPosition)
+                    : 0;
+            int endPosition = itemCount > 1
+                    ? (startPosition + 1)
+                    : 0;
+            // add child views taking into account the currentScrollOffset
+            for (int i = startPosition; i <= endPosition; i++) {
+                View view = addViewFromRecycler(recycler, i, false);
+                int viewRight = getWidth();
+                int viewBottom = viewTop + viewHeight;
+                layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
+                if (!isFirstIsLastItem) {
+                    viewTop = getDecoratedBottom(view) - (int) currentScrollOffset;
+                }
             }
         }
     }
