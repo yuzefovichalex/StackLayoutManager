@@ -126,7 +126,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             if (dy > 0) {
                 // if this case is true than second view scrolls up to max top position
                 // that's why we need to scroll it to 0 (max top position), because top value can be less than 0
-                if (secondViewTop < 0) {
+                if (secondViewTop <= 0) {
                     delta = -secondView.getTop();
                     // this check is needed for correct animation of penult item
                     // every time when second view reaches top of recycler we reset to zero current offset
