@@ -166,30 +166,27 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 }
             }
 
-            // if we can scroll
-            if (delta != 0) {
-                // scroll all view except first
-                for (int i = 1; i < getChildCount(); i++) {
-                    View view = getChildAt(i);
-                    if (view != null) {
-                        int viewTop = view.getTop() + delta;
-                        int viewRight = getWidth();
-                        int viewBottom = view.getBottom() + delta;
-                        layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
-                    }
+            // scroll all view except first
+            for (int i = 1; i < getChildCount(); i++) {
+                View view = getChildAt(i);
+                if (view != null) {
+                    int viewTop = view.getTop() + delta;
+                    int viewRight = getWidth();
+                    int viewBottom = view.getBottom() + delta;
+                    layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
                 }
-
-                // scale-on-scroll
-                firstView.setScaleX(scaleValue);
-                firstView.setScaleY(scaleValue);
-
-                // if second view completely overlaps first view (first view is not visible now) we remove first view
-                if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
-                    removeAndRecycleViewAt(0, recycler);
-                    firstPosition = getPosition(firstView) + 1;
-                }
-                return dy;
             }
+
+            // scale-on-scroll
+            firstView.setScaleX(scaleValue);
+            firstView.setScaleY(scaleValue);
+
+            // if second view completely overlaps first view (first view is not visible now) we remove first view
+            if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
+                removeAndRecycleViewAt(0, recycler);
+                firstPosition = getPosition(firstView) + 1;
+            }
+            return dy;
         }
         return 0;
     }
