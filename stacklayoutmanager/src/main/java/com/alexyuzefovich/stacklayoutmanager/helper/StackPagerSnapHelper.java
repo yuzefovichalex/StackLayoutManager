@@ -1,4 +1,4 @@
-package com.alexyuzefovich.stacklayoutmanager;
+package com.alexyuzefovich.stacklayoutmanager.helper;
 
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
+
+import com.alexyuzefovich.stacklayoutmanager.StackLayoutManager;
 
 /**
  * Helper class provides pager behavior like as PagerSnapHelper,
