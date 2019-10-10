@@ -237,8 +237,22 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
         LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
             @Override
-            protected int getVerticalSnapPreference() {
-                return SNAP_TO_START;
+            protected void onTargetFound(View targetView, RecyclerView.State state, Action action) {
+                View firstView = getChildAt(0);
+                if (firstView != null) {
+                    int firstChildPosition = getPosition(firstView);
+                    int targetViewPosition = getPosition(targetView);
+                    if (targetViewPosition == firstChildPosition) {
+                        View secondView = getChildAt(1);
+                        if (secondView != null) {
+                            int dy = -(getHeight() - secondView.getTop());
+                            int time = calculateTimeForDeceleration(Math.abs(dy));
+                            action.update(0, dy, time, mDecelerateInterpolator);
+                        }
+                    } else {
+                        super.onTargetFound(targetView, state, action);
+                    }
+                }
             }
         };
         linearSmoothScroller.setTargetPosition(position);
@@ -250,7 +264,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         View firstChild = getChildAt(0);
         if (getChildCount() != 0 && firstChild != null) {
             int firstChildPos = getPosition(firstChild);
-            int direction = targetPosition < firstChildPos ? -1 : 1;
+            float direction = targetPosition < firstChildPos ? -1f : 1f;
             return new PointF(0, direction);
         }
         return null;
