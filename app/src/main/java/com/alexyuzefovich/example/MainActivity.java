@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 
 import com.alexyuzefovich.stacklayoutmanager.StackLayoutManager;
-import com.alexyuzefovich.stacklayoutmanager.helper.StackPagerSnapHelper;
+import com.alexyuzefovich.stacklayoutmanager.helper.SmartPagerSnapHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +23,10 @@ public class MainActivity extends AppCompatActivity {
         cardsAdapter.setItems(generateItems());
         recyclerView.setAdapter(cardsAdapter);
         StackLayoutManager stackLayoutManager = new StackLayoutManager();
-        stackLayoutManager.setBottomOffset(50);
         stackLayoutManager.setScaleFactor(0.5f);
         recyclerView.setLayoutManager(stackLayoutManager);
-        StackPagerSnapHelper stackPagerSnapHelper = new StackPagerSnapHelper();
-        stackPagerSnapHelper.attachToRecyclerView(recyclerView);
+        SmartPagerSnapHelper smartPagerSnapHelper = new SmartPagerSnapHelper();
+        smartPagerSnapHelper.attachToRecyclerView(recyclerView);
     }
 
     private List<String> generateItems() {

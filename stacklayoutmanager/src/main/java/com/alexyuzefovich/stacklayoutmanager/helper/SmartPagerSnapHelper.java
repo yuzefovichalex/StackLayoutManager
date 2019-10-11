@@ -9,15 +9,16 @@ import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
-import com.alexyuzefovich.stacklayoutmanager.StackLayoutManager;
-
 /**
  * Helper class provides pager behavior like as PagerSnapHelper,
- * but for using with StackLayoutManager. StackPagerSnapHelper can't guarantee correct behavior with
- * another implementations of RecyclerView.LayoutManager, so using everything except StackLayoutManager
- * will throw IllegalStateException
+ * but for using with StackLayoutManager. SmartPagerSnapHelper can't guarantee correct behavior with
+ * another implementations of RecyclerView.LayoutManager.
+ *
+ * Note:
+ * Page-by-page behavior is observed when using LinearLayoutManager. Unlike PagerSnapHelper, which
+ * aligns snap view to center, SmartPagerSnapHelper will align snap view to top of RecyclerView.
  * **/
-public class StackPagerSnapHelper extends SnapHelper {
+public class SmartPagerSnapHelper extends SnapHelper {
 
     private static final float MILLISECONDS_PER_INCH = 100f;
     private static final int MAX_SCROLLING_TIME = 100;
@@ -35,7 +36,7 @@ public class StackPagerSnapHelper extends SnapHelper {
             if (targetViewPosition == firstViewPosition) {
                 View secondView = layoutManager.getChildAt(1);
                 if (secondView != null) {
-                    out[1] = -(layoutManager.getHeight() - secondView.getTop() - ((StackLayoutManager) layoutManager).getBottomOffset());
+                    out[1] = -(layoutManager.getHeight() - layoutManager.getPaddingBottom() - secondView.getTop());
                 }
             } else {
                 out[1] = targetView.getTop();
@@ -103,8 +104,5 @@ public class StackPagerSnapHelper extends SnapHelper {
     public void attachToRecyclerView(@Nullable RecyclerView recyclerView) throws IllegalStateException {
         super.attachToRecyclerView(recyclerView);
         this.recyclerView = recyclerView;
-        if (recyclerView != null && !(recyclerView.getLayoutManager() instanceof StackLayoutManager)) {
-            throw new IllegalStateException("StackPagerSnapHelper can only be used with StackLayoutManager.");
-        }
     }
 }

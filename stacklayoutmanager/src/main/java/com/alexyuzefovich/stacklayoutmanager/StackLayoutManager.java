@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class StackLayoutManager extends RecyclerView.LayoutManager implements RecyclerView.SmoothScroller.ScrollVectorProvider {
 
-    private static final int DEFAULT_BOTTOM_OFFSET = 0;
     private static final float DEFAULT_SCALE_FACTOR = 1;
 
     // value stored item position of first child view
@@ -18,16 +17,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     private float currentScrollOffset = 0;
 
-    private int bottomOffset = DEFAULT_BOTTOM_OFFSET;
     private float scaleFactor = DEFAULT_SCALE_FACTOR;
-
-    public int getBottomOffset() {
-        return bottomOffset;
-    }
-
-    public void setBottomOffset(int bottomOffset) {
-        this.bottomOffset = bottomOffset;
-    }
 
     public void setScaleFactor(float scaleFactor) {
         this.scaleFactor =
@@ -54,7 +44,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     private void fill(RecyclerView.Recycler recycler) {
         int itemCount = getItemCount();
         if (itemCount > 0) {
-            int viewHeight = getHeight() - bottomOffset;
+            int viewHeight = getHeight() - getPaddingBottom();
             boolean isFirstIsLastItem = firstPosition == itemCount - 1;
             // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
             if (getChildCount() == 0) {
@@ -110,7 +100,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 thirdView = addViewFromRecycler(recycler, secondViewItemPosition + 1, false);
                 int viewTop = getDecoratedBottom(secondView);
                 int viewRight = getWidth();
-                int viewBottom = viewTop + getHeight() - bottomOffset;
+                int viewBottom = viewTop + getDecoratedMeasuredHeight(thirdView);
                 layoutDecorated(thirdView, 0, viewTop, viewRight, viewBottom);
             }
 
@@ -147,7 +137,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                         View view = addViewFromRecycler(recycler, getPosition(firstView) - 1, true);
                         firstPosition = firstViewPosition - 1;
                         int viewRight = getWidth();
-                        int viewBottom = getHeight() - bottomOffset;
+                        int viewBottom = getDecoratedMeasuredHeight(view);
                         layoutDecorated(view, 0, 0, viewRight, viewBottom);
                         view.setScaleX(scaleFactor);
                         view.setScaleY(scaleFactor);
@@ -212,7 +202,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         widthSpec = updateSpecWithExtra(widthSpec, lp.leftMargin + decorRect.left,
                 lp.rightMargin + decorRect.right);
         heightSpec = updateSpecWithExtra(heightSpec, lp.topMargin + decorRect.top,
-                lp.bottomMargin + decorRect.bottom + bottomOffset);
+                lp.bottomMargin + decorRect.bottom + getPaddingBottom());
         child.measure(widthSpec, heightSpec);
     }
 
