@@ -45,21 +45,24 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         int itemCount = getItemCount();
         if (itemCount > 0) {
             int viewHeight = getHeight() - getPaddingBottom();
-            boolean isFirstIsLastItem = firstPosition == itemCount - 1;
+            boolean isFirstPositionIsLastItem = firstPosition == itemCount - 1;
             // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
             if (getChildCount() == 0) {
-                currentScrollOffset = isFirstIsLastItem ? viewHeight : 0;
+                currentScrollOffset = isFirstPositionIsLastItem ? viewHeight : 0;
             } else { // children have updates (ex. resizing)
-                // remove all view before adding and re-measure
-                removeAndRecycleAllViews(recycler);
+                // detach all views before adding and re-measure
+                detachAndScrapAttachedViews(recycler);
             }
 
             int viewTop = 0;
             int startPosition = itemCount > 1
-                    ? (isFirstIsLastItem ? itemCount - 2 : firstPosition)
+                    ? (isFirstPositionIsLastItem ? itemCount - 2 : firstPosition)
                     : 0;
+            int positionOffset = startPosition + 2 < itemCount
+                    ? 2
+                    : itemCount - 1 - startPosition;
             int endPosition = itemCount > 1
-                    ? (startPosition + 1)
+                    ? (startPosition + positionOffset)
                     : 0;
             // add child views taking into account the currentScrollOffset
             for (int i = startPosition; i <= endPosition; i++) {
@@ -67,8 +70,9 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 int viewRight = getWidth();
                 int viewBottom = viewTop + viewHeight;
                 layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
-                if (!isFirstIsLastItem) {
-                    viewTop = getDecoratedBottom(view) - (int) currentScrollOffset;
+                if (!isFirstPositionIsLastItem) {
+                    int offset = i != startPosition + 1 ? (int) currentScrollOffset : 0;
+                    viewTop = getDecoratedBottom(view) - offset;
                 }
             }
         }
@@ -160,10 +164,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             for (int i = 1; i < getChildCount(); i++) {
                 View view = getChildAt(i);
                 if (view != null) {
-                    int viewTop = view.getTop() + delta;
-                    int viewRight = getWidth();
-                    int viewBottom = view.getBottom() + delta;
-                    layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
+                    view.offsetTopAndBottom(delta);
                 }
             }
 
