@@ -136,10 +136,9 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             } else if (dy < 0) { // scroll up
                 if (secondViewTop > getDecoratedBottom(firstView)) {
                     // if first view is not first in item list we add view under current scrolling view (it will be new first view)
-                    int firstViewPosition = getPosition(firstView);
-                    if (firstViewPosition != 0) {
-                        View view = addViewFromRecycler(recycler, getPosition(firstView) - 1, true);
-                        firstPosition = firstViewPosition - 1;
+                    if (firstPosition != 0) {
+                        View view = addViewFromRecycler(recycler, firstPosition - 1, true);
+                        firstPosition--;
                         int viewRight = getWidth();
                         int viewBottom = getDecoratedMeasuredHeight(view);
                         layoutDecorated(view, 0, 0, viewRight, viewBottom);
@@ -173,9 +172,9 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             firstView.setScaleY(scaleValue);
 
             // if second view completely overlaps first view (first view is not visible now) we remove first view
-            if (secondView.getTop() == 0 && getPosition(firstView) != getItemCount() - 2) {
+            if (secondView.getTop() == 0 && firstPosition != getItemCount() - 2) {
                 removeAndRecycleViewAt(0, recycler);
-                firstPosition = getPosition(firstView) + 1;
+                firstPosition++;
             }
             return delta != 0 ? dy : 0;
         }
