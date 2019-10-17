@@ -177,7 +177,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 removeAndRecycleViewAt(0, recycler);
                 firstPosition = getPosition(firstView) + 1;
             }
-            return dy;
+            return delta != 0 ? dy : 0;
         }
         return 0;
     }
