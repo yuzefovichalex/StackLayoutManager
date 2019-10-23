@@ -27,8 +27,8 @@ public class CardsAdapter extends RecyclerView.Adapter<CardsAdapter.CardViewHold
 
     @Override
     public void onBindViewHolder(@NonNull CardViewHolder holder, int position) {
+        holder.cardText.setText(String.valueOf(position + 1));
         holder.card.setCardBackgroundColor(Color.parseColor(items.get(position)));
-        holder.cardText.setText(items.get(position));
     }
 
     @Override

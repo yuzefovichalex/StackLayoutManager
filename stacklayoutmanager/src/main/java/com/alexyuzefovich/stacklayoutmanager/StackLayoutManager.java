@@ -5,6 +5,7 @@ import android.graphics.Rect;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,10 +43,10 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     /**This method is used for fill initial pack of view or when one (or more) child view
      * calls its measure() and layout() methods on resizing event**/
     private void fill(RecyclerView.Recycler recycler) {
-        int itemCount = getItemCount();
+        final int itemCount = getItemCount();
         if (itemCount > 0) {
-            int viewHeight = getHeight() - getPaddingBottom();
-            boolean isFirstPositionIsLastItem = firstPosition == itemCount - 1;
+            final int viewHeight = getHeight() - getPaddingBottom();
+            final boolean isFirstPositionIsLastItem = firstPosition == itemCount - 1;
             // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
             if (getChildCount() == 0) {
                 currentScrollOffset = isFirstPositionIsLastItem ? viewHeight : 0;
@@ -55,20 +56,21 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             }
 
             int viewTop = 0;
-            int startPosition = itemCount > 1
+            final int startPosition = itemCount > 1
                     ? (isFirstPositionIsLastItem ? itemCount - 2 : firstPosition)
                     : 0;
-            int positionOffset = startPosition + 2 < itemCount
+            final int positionOffset = startPosition + 2 < itemCount
                     ? 2
                     : itemCount - 1 - startPosition;
-            int endPosition = itemCount > 1
+            final int endPosition = itemCount > 1
                     ? (startPosition + positionOffset)
                     : 0;
             // add child views taking into account the currentScrollOffset
             for (int i = startPosition; i <= endPosition; i++) {
-                View view = addViewFromRecycler(recycler, i, false);
-                int viewRight = getWidth();
-                int viewBottom = viewTop + viewHeight;
+                final View view = addViewFromRecycler(recycler, i, false);
+                measureMatchParentChild(view);
+                final int viewRight = getWidth();
+                final int viewBottom = viewTop + viewHeight;
                 layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
                 if (!isFirstPositionIsLastItem) {
                     int offset = i != startPosition + 1 ? (int) currentScrollOffset : 0;
@@ -92,9 +94,9 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
      * on scroll**/
     private int scrollBy(int dy, RecyclerView.Recycler recycler) {
         // view fixed in the top
-        View firstView = getChildAt(0);
+        final View firstView = getChildAt(0);
         // view scrolled and overlapped first view
-        View secondView = getChildAt(1);
+        final View secondView = getChildAt(1);
         if (firstView != null && secondView != null) {
             // view scrolled after second view
             View thirdView = getChildAt(2);
@@ -102,15 +104,16 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
             if (thirdView == null && secondViewItemPosition != getItemCount() - 1) {
                 // we take third view from recycler where position is next after second view item
                 thirdView = addViewFromRecycler(recycler, secondViewItemPosition + 1, false);
-                int viewTop = getDecoratedBottom(secondView);
-                int viewRight = getWidth();
-                int viewBottom = viewTop + getDecoratedMeasuredHeight(thirdView);
+                measureMatchParentChild(thirdView);
+                final int viewTop = getDecoratedBottom(secondView);
+                final int viewRight = getWidth();
+                final int viewBottom = viewTop + getDecoratedMeasuredHeight(thirdView);
                 layoutDecorated(thirdView, 0, viewTop, viewRight, viewBottom);
             }
 
             // count offset
             int delta = -dy;
-            int secondViewTop = secondView.getTop() + delta;
+            final int secondViewTop = secondView.getTop() + delta;
 
             // value in range [-viewHeight; viewHeight]
             currentScrollOffset = (currentScrollOffset + dy) % firstView.getHeight();
@@ -137,10 +140,11 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 if (secondViewTop > getDecoratedBottom(firstView)) {
                     // if first view is not first in item list we add view under current scrolling view (it will be new first view)
                     if (firstPosition != 0) {
-                        View view = addViewFromRecycler(recycler, firstPosition - 1, true);
+                        final View view = addViewFromRecycler(recycler, firstPosition - 1, true);
                         firstPosition--;
-                        int viewRight = getWidth();
-                        int viewBottom = getDecoratedMeasuredHeight(view);
+                        measureMatchParentChild(view);
+                        final int viewRight = getWidth();
+                        final int viewBottom = getDecoratedMeasuredHeight(view);
                         layoutDecorated(view, 0, 0, viewRight, viewBottom);
                         view.setScaleX(scaleFactor);
                         view.setScaleY(scaleFactor);
@@ -161,7 +165,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
             // scroll all view except first
             for (int i = 1; i < getChildCount(); i++) {
-                View view = getChildAt(i);
+                final View view = getChildAt(i);
                 if (view != null) {
                     view.offsetTopAndBottom(delta);
                 }
@@ -183,16 +187,19 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     @NonNull
     private View addViewFromRecycler(RecyclerView.Recycler recycler, int position, boolean addToStart) {
-        View view = recycler.getViewForPosition(position);
+        final View view = recycler.getViewForPosition(position);
         if (addToStart) {
             addView(view, 0);
         } else {
             addView(view);
         }
-        int widthSpec = View.MeasureSpec.makeMeasureSpec(getWidth(), View.MeasureSpec.EXACTLY);
-        int heightSpec = View.MeasureSpec.makeMeasureSpec(getHeight(), View.MeasureSpec.EXACTLY);
-        measureChildWithDecorationsAndMargin(view, widthSpec, heightSpec);
         return view;
+    }
+
+    private void measureMatchParentChild(View view) {
+        final int widthSpec = View.MeasureSpec.makeMeasureSpec(getWidth(), View.MeasureSpec.EXACTLY);
+        final int heightSpec = View.MeasureSpec.makeMeasureSpec(getHeight(), View.MeasureSpec.EXACTLY);
+        measureChildWithDecorationsAndMargin(view, widthSpec, heightSpec);
     }
 
     private void measureChildWithDecorationsAndMargin(View child, int widthSpec, int heightSpec) {
@@ -225,7 +232,7 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
 
     @Override
     public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
-        LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
+        final LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
             @Override
             protected void onTargetFound(View targetView, RecyclerView.State state, Action action) {
                 View firstView = getChildAt(0);
@@ -249,12 +256,13 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         startSmoothScroll(linearSmoothScroller);
     }
 
+    @Nullable
     @Override
     public PointF computeScrollVectorForPosition(int targetPosition) {
-        View firstChild = getChildAt(0);
+        final View firstChild = getChildAt(0);
         if (getChildCount() != 0 && firstChild != null) {
-            int firstChildPos = getPosition(firstChild);
-            float direction = targetPosition < firstChildPos ? -1f : 1f;
+            final int firstChildPos = getPosition(firstChild);
+            final float direction = targetPosition < firstChildPos ? -1f : 1f;
             return new PointF(0, direction);
         }
         return null;
