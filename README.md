@@ -7,9 +7,9 @@ Project contains custom SnapHelper for providing snapping effect with StackLayou
 Currently supported only vertical orientation of RecyclerView!
 ## Samples
 ### Basic implementation:
-![](/examples/basic.gif)
+![](/samples/basic.gif)
 ### With snapping (using SmartPagerSnapHepler):
-![](/examples/with_snapping.gif)
+![](/samples/with_snapping.gif)
 ## Usage
 ### Adding dependency
 In root build.gradle:
