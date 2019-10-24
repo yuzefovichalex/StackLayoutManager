@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">StackLayoutManager</string>
+    <string name="card_text">Card %d</string>
+</resources>

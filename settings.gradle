@@ -1,0 +1,2 @@
+include ':app', ':stacklayoutmanager'
+rootProject.name='StackLayoutManager'
