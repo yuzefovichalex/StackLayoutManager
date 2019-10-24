@@ -5,7 +5,11 @@ This layout manager is used to display full-sized (**MATCH_PARENT**) elements in
 If you set not MATCH_PARENT size for item, StackLayoutManager automatically re-measure it.
 Project contains custom SnapHelper for providing snapping effect with StackLayoutManager.
 Currently supported only vertical orientation of RecyclerView!
-## Work examples
+## Samples
+### Basic implementation:
+![](/examples/basic.gif)
+### With snapping (using SmartPagerSnapHepler):
+![](/examples/with_snapping.gif)
 ## Usage
 ### Adding dependency
 In root build.gradle:
