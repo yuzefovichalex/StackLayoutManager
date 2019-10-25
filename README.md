@@ -24,7 +24,7 @@ allprojects {
 In module build.gradle:
 ```gradle
 dependencies {
-	        implementation 'com.github.yuzefovichalex:StackLayoutManager:1.0.0'
+	        implementation 'com.github.yuzefovichalex:StackLayoutManager:1.1.0'
 	}
 ```
 ### Basic usage of StackLayoutManager
