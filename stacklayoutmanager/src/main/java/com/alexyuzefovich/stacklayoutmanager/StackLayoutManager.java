@@ -46,19 +46,16 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
         final int itemCount = getItemCount();
         if (itemCount > 0) {
             final int viewHeight = getHeight() - getPaddingBottom();
-            final boolean isFirstPositionIsLastItem = firstPosition == itemCount - 1;
             // if child count == 0 -> initial set or data update after removing all views (ex. scrollToPosition)
             if (getChildCount() == 0) {
-                currentScrollOffset = isFirstPositionIsLastItem ? viewHeight : 0;
+                currentScrollOffset = 0;
             } else { // children have updates (ex. resizing)
                 // detach all views before adding and re-measure
                 detachAndScrapAttachedViews(recycler);
             }
 
             int viewTop = 0;
-            final int startPosition = itemCount > 1
-                    ? (isFirstPositionIsLastItem ? itemCount - 2 : firstPosition)
-                    : 0;
+            final int startPosition = itemCount > 1 ? firstPosition : 0;
             final int positionOffset = startPosition + 2 < itemCount
                     ? 2
                     : itemCount - 1 - startPosition;
@@ -72,10 +69,8 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 final int viewRight = getWidth();
                 final int viewBottom = viewTop + viewHeight;
                 layoutDecorated(view, 0, viewTop, viewRight, viewBottom);
-                if (!isFirstPositionIsLastItem) {
-                    int offset = i != startPosition + 1 ? (int) currentScrollOffset : 0;
-                    viewTop = getDecoratedBottom(view) - offset;
-                }
+                int offset = i != startPosition + 1 ? (int) currentScrollOffset : 0;
+                viewTop = getDecoratedBottom(view) - offset;
             }
         }
     }
@@ -93,15 +88,26 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
     /**This method is used for apply dy offset for child views and add/remove needed children
      * on scroll**/
     private int scrollBy(int dy, RecyclerView.Recycler recycler) {
+        final int itemCount = getItemCount();
+        if (itemCount < 2) {
+            return 0;
+        }
+
         // view fixed in the top
         final View firstView = getChildAt(0);
+        if (firstView == null) {
+            return 0;
+        }
+        // count offset
+        int delta = -dy;
         // view scrolled and overlapped first view
         final View secondView = getChildAt(1);
-        if (firstView != null && secondView != null) {
+        // if secondView == null -> firstView is last item
+        if (secondView != null) {
             // view scrolled after second view
             View thirdView = getChildAt(2);
             int secondViewItemPosition = getPosition(secondView);
-            if (thirdView == null && secondViewItemPosition != getItemCount() - 1) {
+            if (thirdView == null && secondViewItemPosition != itemCount - 1) {
                 // we take third view from recycler where position is next after second view item
                 thirdView = addViewFromRecycler(recycler, secondViewItemPosition + 1, false);
                 measureMatchParentChild(thirdView);
@@ -111,8 +117,6 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 layoutDecorated(thirdView, 0, viewTop, viewRight, viewBottom);
             }
 
-            // count offset
-            int delta = -dy;
             final int secondViewTop = secondView.getTop() + delta;
 
             // value in range [-viewHeight; viewHeight]
@@ -125,35 +129,20 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 // that's why we need to scroll it to 0 (max top position), because top value can be less than 0
                 if (secondViewTop <= 0) {
                     delta = -secondView.getTop();
-                    // this check is needed for correct animation of penult item
-                    // every time when second view reaches top of recycler we reset to zero current offset
-                    if (getPosition(firstView) != getItemCount() - 2) {
-                        currentScrollOffset = 0;
-                    } else {
-                        // but if this is the penult item - current offset is max possible value (viewHeight),
-                        // because in case of penult item we don't delete first view from recycler
-                        currentScrollOffset = firstView.getHeight();
-                    }
+                    currentScrollOffset = 0;
                 }
                 scaleValue = 1 - Math.abs(currentScrollOffset * scaleFactor) / firstView.getHeight();
             } else if (dy < 0) { // scroll up
                 if (secondViewTop > getDecoratedBottom(firstView)) {
+                    // for scroll to max bottom position without overscroll
+                    delta = getDecoratedBottom(firstView) - getDecoratedTop(secondView);
                     // if first view is not first in item list we add view under current scrolling view (it will be new first view)
                     if (firstPosition != 0) {
-                        final View view = addViewFromRecycler(recycler, firstPosition - 1, true);
-                        firstPosition--;
-                        measureMatchParentChild(view);
-                        final int viewRight = getWidth();
-                        final int viewBottom = getDecoratedMeasuredHeight(view);
-                        layoutDecorated(view, 0, 0, viewRight, viewBottom);
-                        view.setScaleX(scaleFactor);
-                        view.setScaleY(scaleFactor);
-                        currentScrollOffset = firstView.getHeight();
+                        final View view = insertFirstView(recycler);
+                        currentScrollOffset = view.getMeasuredHeight() - delta;
                     } else {
                         currentScrollOffset = 0;
                     }
-                    // for scroll to max bottom position without overscroll
-                    delta = getDecoratedBottom(firstView) - getDecoratedTop(secondView);
                     // remove redundant not visible fourth item
                     if (getChildCount() > 3) {
                         removeAndRecycleViewAt(3, recycler);
@@ -163,26 +152,50 @@ public class StackLayoutManager extends RecyclerView.LayoutManager implements Re
                 }
             }
 
-            // scroll all view except first
-            for (int i = 1; i < getChildCount(); i++) {
-                final View view = getChildAt(i);
-                if (view != null) {
-                    view.offsetTopAndBottom(delta);
-                }
-            }
+            offsetChildren(delta);
 
             // scale-on-scroll
             firstView.setScaleX(scaleValue);
             firstView.setScaleY(scaleValue);
 
             // if second view completely overlaps first view (first view is not visible now) we remove first view
-            if (secondView.getTop() == 0 && firstPosition != getItemCount() - 2) {
+            if (secondView.getTop() == 0) {
                 removeAndRecycleViewAt(0, recycler);
                 firstPosition++;
             }
-            return delta != 0 ? dy : 0;
+        } else {
+            if (firstPosition == itemCount - 1 && dy < 0) {
+                final View view = insertFirstView(recycler);
+                currentScrollOffset = view.getMeasuredHeight() - delta;
+                offsetChildren(delta);
+            } else {
+                delta = 0;
+            }
         }
-        return 0;
+        return delta != 0 ? dy : 0;
+    }
+
+    @NonNull
+    private View insertFirstView(RecyclerView.Recycler recycler) {
+        final View view = addViewFromRecycler(recycler, firstPosition - 1, true);
+        firstPosition--;
+        measureMatchParentChild(view);
+        final int viewRight = getWidth();
+        final int viewBottom = getDecoratedMeasuredHeight(view);
+        layoutDecorated(view, 0, 0, viewRight, viewBottom);
+        view.setScaleX(scaleFactor);
+        view.setScaleY(scaleFactor);
+        return view;
+    }
+
+    private void offsetChildren(int delta) {
+        // scroll all view except first
+        for (int i = 1; i < getChildCount(); i++) {
+            final View view = getChildAt(i);
+            if (view != null) {
+                view.offsetTopAndBottom(delta);
+            }
+        }
     }
 
     @NonNull
